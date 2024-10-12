@@ -1,46 +1,47 @@
-### 1. doipserver 支持报头负载类型
+### 1. doipserver supports header payload types
 
-| DoIP报文分组 | 负载类型 | 负载类型 | 支持情况 | 传输协议 |
+| DoIP packet grouping | Load Type | Load Type | Support | Transport Protocol |
 |-------|-------|-------|-------|-------|
-| 抱头否定报文 | 0x0000 | 通用DoIP报头否定响应 | 支持 | UDP |
-| 节点管理报文 | 0x0001 | 车辆识别请求报文 | 支持 | UDP |
-| 节点管理报文 | 0x0002 | 带EID的车辆识别请求报文 | 支持 | UDP |
-| 节点管理报文 | 0x0003 | 带VIN的车辆识别请求报文 | 支持 | UDP |
-| 节点管理报文 | 0x0004 | 车辆声明报文/车辆识别响应报文 | 支持 | UDP |
-| 节点管理报文 | 0x0005 | 路由激活请求报文 | 支持 | TCP |
-| 节点管理报文 | 0x0006 | 路由激活响应报文 | 支持 | TCP |
-| 诊断报文 | 0x8001 | 诊断报文 | 支持 | TCP |
-| 诊断报文 | 0x8002 | 诊断报文肯定应答 | 支持 | TCP |
-| 车辆信息报文 | 0x4001 | Doip实体状态请求报文 | 支持 | UDP |
-| 车辆信息报文 | 0x4002 | Doip实体状态响应报文 | 支持 | UDP |
+| Denial message | 0x0000 | Generic DoIP Header Negative Response | support | UDP |
+| Node Management Message | 0x0001 | Vehicle identification request message | support | UDP |
+| Node Management Message | 0x0002 | Vehicle identification request message with EID | support | UDP |
+| Node Management Message | 0x0003 | Vehicle identification request message with VIN | support | UDP |
+| Node Management Message | 0x0004 | Vehicle declaration message/Vehicle identification response message | support | UDP |
+| Node Management Message | 0x0005 | Routing activation request message | support | TCP |
+| Node Management Message | 0x0006 | Routing activation response message | support | TCP |
+| Diagnostic message | 0x8001 | Diagnostic message | support | TCP |
+| Diagnostic message | 0x8002 | Diagnostic message positive response | support | TCP |
+| Vehicle information message | 0x4001 | Doip entity status request message | support | UDP |
+| Vehicle information message | 0x4002 | Doip entity status response message | support | UDP |
 
 
-### 2. UDS 支持协议类型
-
-| 大类 | SID(0x) | 诊断服务名 | 服务Service | 支持情况 |
+### 2. UDS supported protocol types
+| Major categories | SID(0x) | Diagnostic service name | Service | Support |
 |-------|-------|-------|-------|-------|
-| 诊断和通信管理功能单元 | 10 | 诊断会话控制 | Diagnostic Session Control | 支持 |
-| 诊断和通信管理功能单元 | 11 | ECU复位 | ECU Reset | 支持 |
-| 诊断和通信管理功能单元 | 27 | 安全访问 | Security Access | 支持 |
-| 诊断和通信管理功能单元 | 28 | 通讯控制 | Communication Control | 不支持 |
-| 诊断和通信管理功能单元 | 3E | 待机握手 | Tester Present | 支持 |
-| 数据传输类 | 22 | 通过ID读数据 | Read Data By Identifier | 支持 |
-| 例程功能类 | 31 | 例行程序控制 | Routine Control | 支持 |
-| 上传下载功能单元 | 34 | 请求下载 | Request Download | 支持 |
-| 上传下载功能单元 | 36 | 数据传输 | Transfer Data | 支持 |
-| 上传下载功能单元 | 37 | 请求退出传输 | Transfer Data Exit | 支持 |
+| Diagnostics and communication management functional unit | 10 | Diagnostic Session Control | Diagnostic Session Control | support |
+| Diagnostics and communication management functional unit | 11 | ECU reset | ECU Reset | support |
+| Diagnostics and communication management functional unit | 27 | Secure Access | Security Access | support |
+| Diagnostics and communication management functional unit | 28 | Communication control | Communication Control | Not supported |
+| Diagnostics and communication management functional unit | 3E | Standby handshake | Tester Present | support |
+| Data transmission | twenty two | Read data by ID | Read Data By Identifier | support |
+| Routine function class | 31 | Routine control | Routine Control | support |
+| Upload and download functional unit | 34 | Request Download | Request Download | support |
+| Upload and download functional unit | 36 | Data Transfer | Transfer Data | support |
+| Upload and download functional unit | 37 | Request to exit transfer | Transfer Data Exit | support |
 
-### 3. doipserver 支持服务类型
 
-- UDP广播服务
-- UDP单播服务
-- TCP单播服务
+### 3. doipserver supported service types
 
-### 4. 支持ECU Gateway 信息配置
+- UDP Broadcast Service
+- UDP unicast service
+- TCP unicast service
 
-### 5. 使用说明
+### 4. Support ECU Gateway information configuration
+
+### 5. Instructions for use
 
 ```shell
 cd doipserver
 sudo python3 server.py
 ```
+
