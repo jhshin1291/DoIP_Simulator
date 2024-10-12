@@ -1,4 +1,4 @@
-import random
+import sys
 
 from udsoncan import MemoryLocation, DataFormatIdentifier
 from udsoncan.exceptions import NegativeResponseException, InvalidResponseException
@@ -6,12 +6,15 @@ from udsoncan import DidCodec, Dtc, DataIdentifier
 from udsoncan.common.dids import *
 from udsoncan.services import *
 from udsoncan.client import Client
-from udsoncan import DataIdentifier, Routine
 from doipclient.connectors import DoIPClientUDSConnector
 from doipclient import DoIPClient
 
-client = DoIPClient("192.168.10.30", 57344, client_logical_address=0x0e80)
-print(client.request_entity_status())
+import json
+with open("../diag-config.json") as f:
+    diag_config = json.loads(f.read())
+    #client = DoIPClient("192.168.10.30", 57344, client_logical_address=0x0e80)
+    client = DoIPClient(diag_config['server']['ip_address'], 57344, client_logical_address=0x0e80)
+    print(client.request_entity_status())
 
 config = {
     'exception_on_negative_response': True,
@@ -29,12 +32,8 @@ config = {
 uds_connection = DoIPClientUDSConnector(client)
 with Client(uds_connection, config=config) as uds_client:
     try:
-        # 执行诊断例程，例程ID和选项需要根据具体情况确定
-        routine_id = Routine.EraseMemory  # 假设的例程ID
-        routine_option = random.randbytes(8)  # 假设的例程选项
+        response = uds_client.request_transfer_exit()
         
-        # 启动例程
-        response = uds_client.start_routine(routine_id, routine_option)
         if response.positive:
             print("传输成功结束")
         else:

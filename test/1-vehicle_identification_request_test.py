@@ -1,5 +1,8 @@
 from doipclient import DoIPClient
-address, announcement = DoIPClient.get_entity()
+import json
+with open("../diag-config.json") as f:
+    diag_config = json.loads(f.read())
+address, announcement = DoIPClient.get_entity(ecu_ip_address=diag_config['client']['broadcast_address'])
 logical_address = announcement.logical_address
 ip, port = address
 vin = announcement.vin

@@ -5,6 +5,8 @@ import socket
 import struct
 import time
 import sys
+import os
+import json
 import yaml
 from enum import IntEnum
 from constants import (
@@ -21,6 +23,7 @@ from udsoncan.Response import Response
 from udsoncan.services import *
 from udsoncan import DataIdentifier, Routine
 import random
+import pdb
 
 global logger
 
@@ -190,7 +193,11 @@ class DoIPVechileAnnouncementMessageBroadcast:
             #         " ".join(f"{byte:02X}" for byte in payload_data),
             #     )
             # )
-            sock.sendto(packet, ('<broadcast>', dest_port))
+            #sock.sendto(packet, ('<broadcast>', dest_port))
+            #sock.sendto(packet, ('10.0.3.255', dest_port))
+            with open("../diag-config.json") as f:
+                diag_config = json.loads(f.read())
+                sock.sendto(packet, (diag_config['server']['broadcast_address'], dest_port))
 
             # Reschedule the function after `interval` seconds
             # threading.Timer(interval, send_message).start()
@@ -219,9 +226,12 @@ class DoIPUDPServer(DatagramProtocol):
 
     def get_host_ip(self):
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(('10.255.255.255', 1))  # 使用一个不存在的地址
-            IP = s.getsockname()[0]
+            with open("../diag-config.json") as f:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                diag_config = json.loads(f.read())
+                s.connect((diag_config['server']['broadcast_address'], 1))  # 使用一个不存在的地址
+                IP = s.getsockname()[0]
         except Exception:
             IP = '127.0.0.1'
         finally:
@@ -309,7 +319,8 @@ class DoIPTCPServer(Protocol):
         self.eid = eid
         self.gid = gid
         self.further_action_required = further_action_required
-        self.seed = random.randbytes(3)
+        #self.seed = random.randbytes(3)
+        self.seed = os.urandom(3)
         self.max_number_of_block_length = 0x0fa2  # 往ECU下载数据的最大块长度
 
     def connectionMade(self):

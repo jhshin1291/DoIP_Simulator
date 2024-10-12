@@ -1,4 +1,5 @@
 from doipclient import DoIPClient
+import pdb
 address, announcement = DoIPClient.await_vehicle_announcement()
 # Power cycle your ECU and wait for a few seconds for the broadcast to be
 # received
