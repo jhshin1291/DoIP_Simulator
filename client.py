@@ -233,7 +233,7 @@ def main():
     time.sleep(1)
 
     # [5] Transfer data
-    pkg_file_path = 'ota/cluster_ota-10M.bin'
+    pkg_file_path = 'ota/cluster_ota-20M.bin'
     if not os.path.exists(pkg_file_path):
         print(f"File not found.. [{pkg_file_path}]")
         exit(-1)
