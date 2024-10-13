@@ -21,10 +21,10 @@ config = {
     'exception_on_invalid_response': True,
     'tolerate_zero_padding': True,
     'ignore_all_zero_dtc': True,
-    'request_timeout': 2,  # 请求超时时间（秒）
+    'request_timeout': 2,  # Request timeout(seconds)
     'data_identifiers': {
-        DataIdentifier.VIN: DidCodec('17s'),  # 假设我们要读取的是车辆识别号（VIN）
-        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # 假设我们要读取的是当前诊断会话
+        DataIdentifier.VIN: DidCodec('17s'),  # Assume we want to read the vehicle identification number (VIN)
+        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # Assume we want to read the current diagnostic session
     }
 }
 
@@ -35,9 +35,9 @@ with Client(uds_connection, config=config) as uds_client:
         response = uds_client.request_transfer_exit()
         
         if response.positive:
-            print("传输成功结束")
+            print("Transfer completed successfully")
         else:
-            print("传输结束请求失败")
+            print("Transfer and request failed")
 
     except NegativeResponseException as e:
         print(f"Server responded with a negative response: {e.response.code_name}")

@@ -15,7 +15,6 @@ from udsoncan.services import *
 
 uds_connection = DoIPClientUDSConnector(client)
 with Client(uds_connection) as uds_client:
-    pdb.set_trace()
     print("[Session Change] defaultSession(1) -> ProgrammingSession(2)")
     uds_client.change_session(DiagnosticSessionControl.Session.programmingSession)
     time.sleep(1)

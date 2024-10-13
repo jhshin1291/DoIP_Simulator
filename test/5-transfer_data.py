@@ -19,25 +19,26 @@ config = {
     'exception_on_invalid_response': True,
     'tolerate_zero_padding': True,
     'ignore_all_zero_dtc': True,
-    'request_timeout': 2,  # 请求超时时间（秒）
+    'request_timeout': 2,  # Request timeout(seconds)
     'data_identifiers': {
-        DataIdentifier.VIN: DidCodec('17s'),  # 假设我们要读取的是车辆识别号（VIN）
-        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # 假设我们要读取的是当前诊断会话
+        DataIdentifier.VIN: DidCodec('17s'),  # Assume we want to read the vehicle identification number (VIN)
+        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # Assume we want to read the current diagnostic session
     }
 }
 
 uds_connection = DoIPClientUDSConnector(client)
 with Client(uds_connection, config=config) as uds_client:
     try:
-        block_sequence_counter = 1  # 数据块序列计数器，根据需要调整
-        data_to_transfer = b'\x01\x02\x03\x04\x05'  # 需要传输的数据
-        # 发送传输数据请求
+        block_sequence_counter = 1  # Data block sequence counter, adjust as needed
+        data_to_transfer = b'\x01\x02\x03\x04\x05'  # Data to be transmitted
+
+        # Send a request to transfer data
         response = uds_client.transfer_data(block_sequence_counter, data_to_transfer)
 
-        # 检查响应
+        # Chcek the response
         if response.positive:
             print("Data transfer successful")
-            # 如果需要，继续传输更多数据块...
+            # continue transferring more chunks if necessary ...
         else:
             print("Data transfer failed")
 

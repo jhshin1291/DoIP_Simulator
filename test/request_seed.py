@@ -13,38 +13,37 @@ from udsoncan.common.dids import *
 from udsoncan import DidCodec, Dtc, DataIdentifier
 from udsoncan.exceptions import NegativeResponseException, InvalidResponseException
 
-
 config = {
     'exception_on_negative_response': True,
     'exception_on_invalid_response': True,
     'tolerate_zero_padding': True,
     'ignore_all_zero_dtc': True,
     'data_identifiers': {
-        DataIdentifier.VIN: DidCodec('17s'),  # 假设我们要读取的是车辆识别号（VIN）
-        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # 假设我们要读取的是当前诊断会话
+        DataIdentifier.VIN: DidCodec('17s'),  # Assume we want to read the vehicle identification number (VIN)
+        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # Assume we want to read the current diagnostic session
     }
 }
 
-# 假设这是你的密钥计算函数
+# Assume this is your key calculation function
 def calculate_key(seed):
-    # 这里应该是你的密钥计算逻辑
-    # 作为示例，我们只是简单地返回种子值作为密钥
+    # This should be your key calculation logic
+    # As an example, we simply return the seed value as the key
     return seed
 
 uds_connection = DoIPClientUDSConnector(client)
 with Client(uds_connection, config=config) as uds_client:
     try:
-        # 请求种子
-        response = uds_client.request_seed(level=1)  # security_level根据实际情况设置
+        # Request a seed
+        response = uds_client.request_seed(level=1)  # security_level is set according to the actual situation
         seed = response.service_data.seed
         print(f"Received seed: {seed}")
 
-        # 计算密钥
+        # Calculate the key
         key = calculate_key(seed)
         print(f"Calculated key: {key}")
 
-        # 发送密钥
-        uds_client.send_key(level=1, key=key)  # security_level需要与request_seed时相同
+        # Send key
+        uds_client.send_key(level=1, key=key)  # security_level needs to be the same as request_seed
         print("Access granted")
 
     except NegativeResponseException as e:

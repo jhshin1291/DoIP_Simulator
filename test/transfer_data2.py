@@ -20,10 +20,10 @@ config = {
     'exception_on_invalid_response': True,
     'tolerate_zero_padding': True,
     'ignore_all_zero_dtc': True,
-    'request_timeout': 2,  # 请求超时时间（秒）
+    'request_timeout': 2,  # Request timeout(seconds)
     'data_identifiers': {
-        DataIdentifier.VIN: DidCodec('17s'),  # 假设我们要读取的是车辆识别号（VIN）
-        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # 假设我们要读取的是当前诊断会话
+        DataIdentifier.VIN: DidCodec('17s'),  # Assume we want to read the vehicle identification number (VIN)
+        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # Assume we want to read the current diagnostic session
     }
 }
 
@@ -34,19 +34,20 @@ uds_connection = DoIPClientUDSConnector(client)
 with Client(uds_connection, config=config) as uds_client:
     try:
         with open(file_path, 'rb') as file:
-            block_sequence_counter = 1  # 初始化数据块序列计数器
+            block_sequence_counter = 1  # Initialize the data block sequence counter
             while True:
-                data_to_transfer = file.read(max_number_of_block_length)  # 按最大长度读取文件内容
+                data_to_transfer = file.read(max_number_of_block_length)  # Read the file content according to the maximum length
                 if not data_to_transfer:
-                    break  # 如果没有数据了，结束循环
-                # 发送传输数据请求
-                response = uds_client.transfer_data(block_sequence_counter, data_to_transfer)
-                block_sequence_counter += 1  # 更新数据块序列计数器
+                    break  # If there is no data, end the loop
 
-                # 检查响应
+                # Send a request to transfer data
+                response = uds_client.transfer_data(block_sequence_counter, data_to_transfer)
+                block_sequence_counter += 1  # Update the data block sequence counter
+
+                # Check the response
                 if not response.positive:
                     print("Data transfer failed")
-                    break  # 如果传输失败，结束循环
+                    break  # If the transfer files, end the loop
 
         print("Data transfer successful")
 

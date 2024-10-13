@@ -23,10 +23,10 @@ config = {
     'exception_on_invalid_response': True,
     'tolerate_zero_padding': True,
     'ignore_all_zero_dtc': True,
-    'request_timeout': 2,  # 请求超时时间（秒）
+    'request_timeout': 2,  # request timeout(s)
     'data_identifiers': {
-        DataIdentifier.VIN: DidCodec('17s'),  # 假设我们要读取的是车辆识别号（VIN）
-        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # 假设我们要读取的是当前诊断会话
+        DataIdentifier.VIN: DidCodec('17s'),  # Assume we want to read the vehicle identificaion number (VIN)
+        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # Assume we want to read the current diagnostic session
     }
 }
 
@@ -34,17 +34,17 @@ config = {
 uds_connection = DoIPClientUDSConnector(client)
 with Client(uds_connection, config=config) as uds_client:
     try:
-        # 执行诊断例程，例程ID和选项需要根据具体情况确定
-        routine_id = Routine.EraseMemory  # 假设的例程ID
-        #routine_option = random.randbytes(8)  # 假设的例程选项
-        routine_option = os.urandom(8)  # 假设的例程选项
+        # Execute the diagnostic routine. the routine ID and options need to be determined according to the specific situation
+        routine_id = Routine.EraseMemory  # Assumed routine ID
+        #routine_option = random.randbytes(8)  # Hypothetical routine option
+        routine_option = os.urandom(8)  # Assumed routine option
         
-        # 启动例程
+        # start the routine
         response = uds_client.start_routine(routine_id, routine_option)
         if response.positive:
-            print("传输成功结束")
+            print("Transfer completed succesesfully")
         else:
-            print("传输结束请求失败")
+            print("Transfer end request failed")
 
     except NegativeResponseException as e:
         print(f"Server responded with a negative response: {e.response.code_name}")

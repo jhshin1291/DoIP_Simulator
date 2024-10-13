@@ -20,34 +20,38 @@ config = {
     'exception_on_invalid_response': True,
     'tolerate_zero_padding': True,
     'ignore_all_zero_dtc': True,
-    'request_timeout': 2,  # 请求超时时间（秒）
+    'request_timeout': 2,  # Request timeout(seconds)
     'data_identifiers': {
-        DataIdentifier.VIN: DidCodec('17s'),  # 假设我们要读取的是车辆识别号（VIN）
-        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # 假设我们要读取的是当前诊断会话
+        DataIdentifier.VIN: DidCodec('17s'),  # Assume we want to read the vehicle identification number (VIN)
+        DataIdentifier.ActiveDiagnosticSession: DidCodec('B')  # Assume we want to read the current diagnostic session
     }
 }
 
-# 假设这是你的密钥计算函数
+# Assume this is your key calculation function
 def calculate_key(seed):
-    # 这里应该是你的密钥计算逻辑
-    # 作为示例，我们只是简单地返回种子值作为密钥
+    # This should be your key calculation logic
+    # As an example, we simply return the seed value as the key
     return seed
 
 uds_connection = DoIPClientUDSConnector(client)
 with Client(uds_connection, config=config) as uds_client:
     try:
-        memory_location = MemoryLocation(address=0x1234, memorysize=0x1000, address_format=32, memorysize_format=32)  # 需要下载到的内存地址和大小
-        data_format = DataFormatIdentifier(compression=1, encryption=0)  # 数据格式
+        # The memory address and size
+        memory_location = MemoryLocation(address=0x1234, memorysize=0x1000, address_format=32, memorysize_format=32)
 
-        # 发送下载请求
+        # Data format
+        data_format = DataFormatIdentifier(compression=1, encryption=0)
+
+        # Send download request
         response = uds_client.request_download(memory_location, data_format)
 
-        # 检查响应
+        # Check the response
         if response.positive:
             print("Download request accepted")
-            # 进行数据传输...
+            # preform data transfer ...
         else:
             print("Download request was not accepted")
+
     except NegativeResponseException as e:
         print(f"Server responded with a negative response: {e.response.code_name}")
     except InvalidResponseException as e:
