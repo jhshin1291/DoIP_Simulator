@@ -1,7 +1,4 @@
-### 1. doipserver supports header payload types
-
-| DoIP packet grouping | Load Type | Load Type | Support | Transport Protocol |
-|-------|-------|-------|-------|-------|
+### 1. doipserver supports header payload types | DoIP packet grouping | Load Type | Load Type | Support | Transport Protocol | |-------|-------|-------|-------|-------|
 | Denial message | 0x0000 | Generic DoIP Header Negative Response | support | UDP |
 | Node Management Message | 0x0001 | Vehicle identification request message | support | UDP |
 | Node Management Message | 0x0002 | Vehicle identification request message with EID | support | UDP |
@@ -40,8 +37,15 @@
 
 ### 5. Instructions for use
 
+server
+
 ```shell
-cd doipserver
 sudo python3 server.py
+```
+
+client
+
+```shell
+sudo python3 client.py
 ```
 

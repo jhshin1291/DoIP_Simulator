@@ -57,3 +57,4 @@ with Client(uds_connection, config=config) as uds_client:
         print("Server responded with an invalid response")
     except Exception as e:
         print(f"An error occurred: {str(e)}")
+
