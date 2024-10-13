@@ -30,19 +30,20 @@ global logger
 def setup_logger():
 
     logger = logging.getLogger("doipserver")
-    # 设置日志级别
+
+    # set the log level
     logger.setLevel(logging.DEBUG)
 
-    # 创建一个流处理器并设置级别
+    # Create a stream processor and set the level
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setLevel(logging.DEBUG)
 
-    # （可选）设置日志格式
+    # (Optional) Set the log format
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     stream_handler.setFormatter(formatter)
 
-    # 将流处理器添加到logger
+    # Add the stream processor to the logger
     logger.addHandler(stream_handler)
     return logger
 
@@ -230,7 +231,7 @@ class DoIPUDPServer(DatagramProtocol):
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
                 diag_config = json.loads(f.read())
-                s.connect((diag_config['server']['broadcast_address'], 1))  # 使用一个不存在的地址
+                s.connect((diag_config['server']['broadcast_address'], 1))  # Using a non-existent address
                 IP = s.getsockname()[0]
         except Exception:
             IP = '127.0.0.1'
@@ -252,19 +253,20 @@ class DoIPUDPServer(DatagramProtocol):
         return data_bytes
 
     def startProtocol(self):
-        # 当UDP服务器启动时调用
+        # Called when the UDP server starts
         logger.info("UDP Server started")
 
     def stopProtocol(self):
-        # 当UDP服务器停止时调用
+        # Called when the UDP server stops
         logger.info("UDP Server stopped")
 
     def datagramReceived(self, datagram, addr):
-        # 过滤指定源端口号的会话，例如源端口号为12345
+        # Filter sessions with a specified port number, for example, source port number 12345
         if addr[0] == self.host_ip:
             # logger.info(f"Ignored: {datagram} from {addr}")
-            return  # 不处理来自此端口的数据
-        # 当UDP服务器接收到数据时调用
+            return  # Do not process data fro this port
+
+        # Called when the UDP server receives data
         logger.info(f"Received: {datagram} from {addr}")
         parser = Parser()
         parser.reset()
@@ -306,10 +308,11 @@ class DoIPUDPServer(DatagramProtocol):
                 " ".join(f"{byte:02X}" for byte in payload_data),
             )
         )
-        # 这里可以根据需要处理接收到的数据或者回复客户端
+
+        # Here you can process the received data or reply to the client as needed
         self.transport.write(data_bytes, addr)
 
-# TCP服务器逻辑
+# TCP server logic
 
 
 class DoIPTCPServer(Protocol):
@@ -319,9 +322,10 @@ class DoIPTCPServer(Protocol):
         self.eid = eid
         self.gid = gid
         self.further_action_required = further_action_required
+        # [Fix error] due to the python version
         #self.seed = random.randbytes(3)
         self.seed = os.urandom(3)
-        self.max_number_of_block_length = 0x0fa2  # 往ECU下载数据的最大块长度
+        self.max_number_of_block_length = 0x0fa2  # Maximum block length for downloading data to ECU
 
     def connectionMade(self):
         peer = self.transport.getPeer()
@@ -390,7 +394,7 @@ class DoIPTCPServer(Protocol):
         self.transport.write(data_bytes)
     
     def _send_uds_response(self, source_address, target_address, service, code, data):
-        # 确保data是bytes类型
+        # Make sure data is of bytes type
         if isinstance(data, bytearray):
             data = bytes(data)
         uds_response = Response(service, code, data).get_payload()
@@ -399,10 +403,10 @@ class DoIPTCPServer(Protocol):
 
     def append_to_file(self, data):
         """
-        往指定的文件中追加写入数据。如果文件不存在，则创建文件。
+        Appends data to the specified file. If the file does not exist, it is created
         
-        :param file_path: 文件的路径
-        :param data: 要写入的数据
+        :param file_path: the path of the file
+        :param data: data to be written
         """
         with open(self.append_file_name, 'ab') as file:
             file.write(data)
@@ -466,7 +470,7 @@ class DoIPTCPServer(Protocol):
                 logger.info(
                     f"Received TransferData, request.subfunction: {request.subfunction}, suppress_positive_response: {request.suppress_positive_response}")
                 self.append_to_file(request.data[1:])
-                # 先发送一个response is pending message
+                # First send a response is pending message
                 code = Response.Code.RequestCorrectlyReceived_ResponsePending
                 data = None
                 self._send_uds_response(source_address, target_address, request.service, code, data)
@@ -486,7 +490,7 @@ class DoIPTCPServer(Protocol):
                     f"Received RoutineControl, request.subfunction: {request.subfunction}, suppress_positive_response: {request.suppress_positive_response}")
                 logger.info(' '.join([f'{byte:02x}' for byte in request.data]))
                 rid = int.from_bytes(request.data[:2], byteorder='big')
-                # 先发送一个response is pending message
+                # First send a response is pending message
                 code = Response.Code.RequestCorrectlyReceived_ResponsePending
                 data = None
                 self._send_uds_response(source_address, target_address, request.service, code, data)
@@ -508,24 +512,25 @@ class DoIPTCPServer(Protocol):
         parser.reset()
         result = parser.read_message(data)
         if result:
-            # 路由激活请求
+            # Routing activation request
             if type(result) == RoutingActivationRequest:
                 logger.info(f"Received RoutingActivationRequest: {result}")
                 source_address = result.source_address
                 self._send_routing_activation_response(
                     source_address, self.logical_address, RoutingActivationResponse.ResponseCode.Success)
 
-            # 诊断消息
+            # Diagnostic messages
             if type(result) == DiagnosticMessage:
                 logger.info(f"Received DiagnosticMessage: {result}")
                 source_address = result.source_address
                 user_data = result.user_data  # uds message
 
-                # 诊断消息回复
+                # Diagnostic message reply
                 self._send_diagnostic_acknowledgement(
                     self.logical_address, source_address, 0)
 
-                # UDS MESSAGE 处理
+                # UDS MESSAGE processing
+                self._send_diagnostic_acknowledgement(
                 self._uds_request_handler(
                     self.logical_address, source_address, user_data)
 
