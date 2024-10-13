@@ -530,7 +530,6 @@ class DoIPTCPServer(Protocol):
                     self.logical_address, source_address, 0)
 
                 # UDS MESSAGE processing
-                self._send_diagnostic_acknowledgement(
                 self._uds_request_handler(
                     self.logical_address, source_address, user_data)
 
