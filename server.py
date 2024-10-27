@@ -435,7 +435,8 @@ class DoIPTCPServer(Protocol):
                 logger.info(
                     f"Received DiagnosticSessionControl, request.subfunction: {request.subfunction}, suppress_positive_response: {request.suppress_positive_response}")
                 code = Response.Code.PositiveResponse
-                data = subfunction.to_bytes(1, byteorder='big') + b'\x00\x19\x01\xf4'
+                #data = subfunction.to_bytes(1, byteorder='big') + b'\x00\x19\x01\xf4'  # p2-default(25ms), p2-star(5000ms)
+                data = subfunction.to_bytes(1, byteorder='big') + b'\x00\x32\x01\xf4'   # p2-default(50ms), p2-star(5000ms)
 
             elif request.service == ReadDataByIdentifier:
                 logger.info(
@@ -472,11 +473,13 @@ class DoIPTCPServer(Protocol):
                     f"Received TransferData, request.subfunction: {request.subfunction}, suppress_positive_response: {request.suppress_positive_response}")
                 self.append_to_file(request.data[1:])
                 # First send a response is pending message
+                '''
                 code = Response.Code.RequestCorrectlyReceived_ResponsePending
                 data = None
                 self._send_uds_response(source_address, target_address, request.service, code, data)
+                '''
                 self.transport.doWrite()
-                time.sleep(0.1)
+                time.sleep(0.01) # 10ms
                 code = Response.Code.PositiveResponse
                 data = request.data[0].to_bytes(1, byteorder='big')
             
