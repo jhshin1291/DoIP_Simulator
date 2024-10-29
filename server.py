@@ -25,6 +25,12 @@ from udsoncan import DataIdentifier, Routine
 import random
 import pdb
 
+
+from pathlib import Path
+
+script_path = Path(__file__).resolve()
+script_dir = script_path.parent
+
 global logger
 
 def setup_logger():
@@ -196,7 +202,7 @@ class DoIPVechileAnnouncementMessageBroadcast:
             # )
             #sock.sendto(packet, ('<broadcast>', dest_port))
             #sock.sendto(packet, ('10.0.3.255', dest_port))
-            with open("diag-config.json") as f:
+            with open(f"{script_dir}/diag-config.json") as f:
                 diag_config = json.loads(f.read())
                 sock.sendto(packet, (diag_config['server']['broadcast_address'], dest_port))
 
@@ -227,7 +233,7 @@ class DoIPUDPServer(DatagramProtocol):
 
     def get_host_ip(self):
         try:
-            with open("diag-config.json") as f:
+            with open(f"{script_dir}/diag-config.json") as f:
                 diag_config = json.loads(f.read())
 
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -326,7 +332,11 @@ class DoIPTCPServer(Protocol):
         # [Fix error] due to the python version
         #self.seed = random.randbytes(3)
         self.seed = os.urandom(3)
-        self.max_number_of_block_length = 0x0fa2  # Maximum block length for downloading data to ECU
+        #self.max_number_of_block_length = 0x0fa2  # Maximum block length for downloading data to ECU
+        self.max_number_of_block_length = 0x1000  # Maximum block length for downloading data to ECU (4K)
+        #self.max_number_of_block_length = 0x4000  # Maximum block length for downloading data to ECU (16K)
+        #self.max_number_of_block_length = 0x10000  # Maximum block length for downloading data to ECU (64K)
+        self.auth_flag = False
 
     def connectionMade(self):
         peer = self.transport.getPeer()
@@ -456,9 +466,13 @@ class DoIPTCPServer(Protocol):
                 code = Response.Code.PositiveResponse
                 logger.info(f"SecurityAccess: {request}  {request.data}")
                 if subfunction == 0x01:
-                    data = subfunction.to_bytes(1, byteorder='big') + self.seed
+                    if self.auth_flag == False:
+                        data = subfunction.to_bytes(1, byteorder='big') + self.seed
+                    elif self.auth_flag == True:
+                        data = subfunction.to_bytes(1, byteorder='big') + int(0).to_bytes(3, byteorder='big')
                 elif subfunction == 0x02:
                     data = subfunction.to_bytes(1, byteorder='big')
+                    self.auth_flag = True
                 logger.info(f"request.data: {request.data}")
             
             elif request.service == RequestDownload:
@@ -466,20 +480,19 @@ class DoIPTCPServer(Protocol):
                     f"Received RequestDownload, request.subfunction: {request.subfunction}, suppress_positive_response: {request.suppress_positive_response}")
                 code = Response.Code.PositiveResponse
                 logger.info(' '.join([f'{byte:02x}' for byte in request.data]))
-                data = b'\x20' + self.max_number_of_block_length.to_bytes(2, byteorder='big')
+                #data = b'\x20' + self.max_number_of_block_length.to_bytes(2, byteorder='big')
+                data = b'\x20' + self.max_number_of_block_length.to_bytes(4, byteorder='big')
             
             elif request.service == TransferData:
                 logger.info(
                     f"Received TransferData, request.subfunction: {request.subfunction}, suppress_positive_response: {request.suppress_positive_response}")
                 self.append_to_file(request.data[1:])
                 # First send a response is pending message
-                '''
-                code = Response.Code.RequestCorrectlyReceived_ResponsePending
-                data = None
-                self._send_uds_response(source_address, target_address, request.service, code, data)
-                '''
-                self.transport.doWrite()
-                time.sleep(0.01) # 10ms
+                #code = Response.Code.RequestCorrectlyReceived_ResponsePending
+                #data = None
+                #self._send_uds_response(source_address, target_address, request.service, code, data)
+                #self.transport.doWrite()
+                #time.sleep(0.1)
                 code = Response.Code.PositiveResponse
                 data = request.data[0].to_bytes(1, byteorder='big')
             
@@ -511,7 +524,7 @@ class DoIPTCPServer(Protocol):
                 self._send_uds_response(source_address, target_address, request.service, code, data)
 
     def dataReceived(self, data):
-        logger.info(f"TCP: Received {data}")
+        logger.info(f"TCP: Received {data[:20]}")
         parser = Parser()
         parser.reset()
         result = parser.read_message(data)
@@ -561,7 +574,7 @@ def start_server(vin, logical_address, eid, gid, port=13400):
 
 def load_ecu_conf():
     try:
-        with open('yaml.conf', 'r') as file:
+        with open(f'{script_dir}/yaml.conf', 'r') as file:
             ecu_conf = yaml.safe_load(file)
             logger.info(ecu_conf)
             return ecu_conf

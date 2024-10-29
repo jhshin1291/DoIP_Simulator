@@ -18,8 +18,13 @@ import json
 import sys
 import pdb
 
+from pathlib import Path
+
+script_path = Path(__file__).resolve()
+script_dir = script_path.parent
+
 # E/E config
-with open("diag-config.json") as f:
+with open(f"{script_dir}/diag-config.json") as f:
     diag_config = json.loads(f.read())
 
 # DoIP/UDS config
@@ -57,22 +62,25 @@ def sess_change(session):
 
 
 # [2] Security Access
-def security_access():
+def security_access(subfn, seed=None):
     # Assume this is your key calculation function
     with Client(uds_connection, config=config) as uds_client:
         try:
-            # Request a seed
-            response = uds_client.request_seed(level=1)  # security_level is set according to the actual situation
-            seed = response.service_data.seed
-            print(f"Received seed: {seed}")
+            if subfn == 'request_seed':
+                # Request a seed
+                response = uds_client.request_seed(level=1)  # security_level is set according to the actual situation
+                seed = response.service_data.seed
+                print(f"Received seed: {seed}")
+                return seed
 
-            # Calculate the key
-            key = calculate_key(seed)
-            print(f"Calculated key: {key}")
+            if subfn == 'send_key':
+                # Calculate the key
+                key = calculate_key(seed)
+                print(f"Calculated key: {key}")
 
-            # Send key
-            uds_client.send_key(level=1, key=key)  # security_level needs to be the same as request_seed
-            print("Access granted")
+                # Send key
+                uds_client.send_key(level=1, key=key)  # security_level needs to be the same as request_seed
+                print("Access granted")
 
         except NegativeResponseException as e:
             print(f"Server responded with a negative response: {e.response.code_name}")
@@ -105,14 +113,16 @@ def routine():
         except Exception as e:
             print(f"An error occurred: {str(e)}")
 
-def requeset_download():
+def requeset_download(pkg_size):
     with Client(uds_connection, config=config) as uds_client:
         try:
             # The memory address and size
-            memory_location = MemoryLocation(address=0x1234, memorysize=0x1000, address_format=32, memorysize_format=32)
+            #memory_location = MemoryLocation(address=0x1234, memorysize=0x1000, address_format=32, memorysize_format=32)
+            print(f"Package size: {hex(pkg_size)}")
+            memory_location = MemoryLocation(address=0x1234, memorysize=pkg_size, address_format=32, memorysize_format=32)
 
             # Data format
-            data_format = DataFormatIdentifier(compression=1, encryption=0)
+            data_format = DataFormatIdentifier(compression=0, encryption=0)
 
             # Send download request
             response = uds_client.request_download(memory_location, data_format)
@@ -158,8 +168,9 @@ def transfer_data():
 def transfer_data2(pkg_file_path):
     config['request_timeout'] = 2  # Request timeout(seconds)
     #max_number_of_block_length = 0x0fa2 - 2
-    #max_number_of_block_length = 0x1000 - 2
-    max_number_of_block_length = 0x1002 - 2
+    max_number_of_block_length = 0x1000 - 2  # 4K
+    #max_number_of_block_length = 0x4000 - 2   # 16K
+    #max_number_of_block_length = 0x10000 - 2 # 64K
     with Client(uds_connection, config=config) as uds_client:
         print("Data transfer start !")
         try:
@@ -228,15 +239,19 @@ def main():
     routine()
     time.sleep(1)
 
-    # [4] Request download
-    requeset_download()
-    time.sleep(1)
-
-    # [5] Transfer data
-    pkg_file_path = 'ota/cluster_ota-20M.bin'
+    #pkg_file_path = f'{script_dir}/ota/cluster_ota-20M.bin'
+    pkg_file_path = f'{script_dir}/ota/cluster_ota-10M.bin'
     if not os.path.exists(pkg_file_path):
         print(f"File not found.. [{pkg_file_path}]")
         exit(-1)
+
+    file_size = os.path.getsize(pkg_file_path)
+
+    # [4] Request download
+    requeset_download(file_size)
+    time.sleep(1)
+
+    # [5] Transfer data
     transfer_data2(pkg_file_path)
     time.sleep(1)
 
@@ -248,5 +263,41 @@ def main():
     sess_change(DiagnosticSessionControl.Session.defaultSession)
 
 
+def main_security_access_unlocked_server():
+    seed = security_access('request_seed')
+    time.sleep(1)
+
+    security_access('send_key', seed)
+    time.sleep(1)
+
+    seed = security_access('request_seed')
+    time.sleep(1)
+
+
+def main_debug():
+    #pkg_file_path = f'{script_dir}/ota/cluster_ota-20M.bin'
+    pkg_file_path = f'{script_dir}/ota/cluster_ota-10M.bin'
+    if not os.path.exists(pkg_file_path):
+        print(f"File not found.. [{pkg_file_path}]")
+        exit(-1)
+
+    file_size = os.path.getsize(pkg_file_path)
+
+    # [4] Request download
+    requeset_download(file_size)
+    time.sleep(1)
+
+    # [5] Transfer data
+    transfer_data2(pkg_file_path)
+    time.sleep(1)
+
+    # [6] Transfer data exit
+    transfer_data_exit()
+    time.sleep(1)
+
+
+
+
 if __name__ == "__main__":
-    main()
+    #main()
+    main_debug()
